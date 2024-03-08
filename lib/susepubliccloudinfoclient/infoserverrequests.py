@@ -24,6 +24,7 @@ import requests
 import sys
 import urllib
 from lxml import etree
+import xmltodict
 
 
 def __apply_filters(superset, filters):
@@ -415,3 +416,22 @@ def get_server_data(
         apply_filters=command_arg_filter
     )
     return __process(url, info_type, command_arg_filter, result_format)
+
+def get_date_filtered_image(date, provider, format):
+    # get data from API
+    images = get_image_data(provider,None,"json", "all",None)
+    # transform data to help in filtering
+    images_dict = json.loads(images)
+
+    images_filtered = {"images":[]}
+    # run through the dictionary to verify each publish date
+    for img in range(len(images_dict["images"])):
+        if int(images_dict["images"][img]["publishedon"]) >= int(date):
+            images_filtered["images"].append(images_dict["images"][img])
+
+    # verify which type of response user asked
+    if format == "json":
+        return images_filtered
+    else:
+        result_xml = {"root": images_filtered}
+        return xmltodict.unparse(result_xml, pretty=True)

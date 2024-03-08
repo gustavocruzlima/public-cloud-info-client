@@ -1,3 +1,4 @@
 docopt
 lxml
 requests
+xmltodict

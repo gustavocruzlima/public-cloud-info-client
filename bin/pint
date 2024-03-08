@@ -36,6 +36,7 @@ usage: pint -h | --help
           [ --smt | --regionserver ]
        pint ({PROVIDERS}) images
           [ --active | --inactive | --deleted | --deprecated ]
+       pint --datesearch=<date>
           [ --filter=<filter> ]
           [ --json | --xml ]
           [ --region=<region> ]
@@ -51,6 +52,8 @@ options:
    --deprecated
        Only include images which are deprecated
        (scheduled for deletion in 6 months)
+   --datesearch=<date>
+       search images that were published after the input date in format YYYYMMDD
    --filter=<filter>
        Comma separated list of available attributes
    --inactive
@@ -78,8 +81,11 @@ import sys
 
 from docopt import docopt
 
-import susepubliccloudinfoclient.infoserverrequests as ifsrequest
-import susepubliccloudinfoclient.version as version
+import lib.susepubliccloudinfoclient.infoserverrequests as ifsrequest
+import lib.susepubliccloudinfoclient.version as version
+
+
+        
 
 try:
     provider_data = ifsrequest.get_provider_data(
@@ -97,6 +103,16 @@ except json.decoder.JSONDecodeError:
 cloud_providers = []
 for provider in providers['providers']:
     cloud_providers.append(provider['name'])
+
+date_search = None
+for arg in sys.argv:
+    if arg.startswith('--datesearch='):
+        date_search = arg.split('=', 1)[1]
+        
+        #execute search for each provider
+        for provider in providers['providers']:
+            filtered_images = ifsrequest.get_date_filtered_image(date_search, provider["name"], "json")
+            print(filtered_images)
 
 command_args = docopt(
     __doc__.format(
@@ -148,17 +164,39 @@ region = 'all'
 if command_args['--region']:
     region = command_args['--region']
 
+# published_after = None
+# if command_args['--publishedafter']:
+#     published_after = command_args['--publishedafter']
+
+#     # formatted_date = datetime.strptime(published_after, "%Y-%m-%d").strftime("%Y%m%d")
+
+#     print(published_after)
+
+
 try:
     if command_args['images']:
-        data = ifsrequest.get_image_data(
+        if date_search:
+            print("o")
+        else:
+            data = ifsrequest.get_image_data(
+                framework,
+                image_state,
+                output_format,
+                region,
+                command_args['--filter'])
+            if '<images/>' in data or '"images": []' in data:
+                data = 'No information available. Please check your filter'
+        
+        # print(data)
+            
+    elif command_args['teste']:
+        data = ifsrequest.get_date_filtered_image(
+            "20240407",
             framework,
-            image_state,
-            output_format,
-            region,
-            command_args['--filter'])
-        if '<images/>' in data or '"images": []' in data:
-            data = 'No information available. Please check your filter'
+            output_format)
         print(data)
+
+
     elif command_args['servers']:
         print(ifsrequest.get_server_data(
             framework,
