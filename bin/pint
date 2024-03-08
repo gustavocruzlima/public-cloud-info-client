@@ -20,6 +20,7 @@
 #
 """
 usage: pint -h | --help
+       pint --filterhelp
        pint providers
           [ --json | --xml ]
        pint image_states
@@ -45,6 +46,8 @@ usage: pint -h | --help
 options:
    -h --help
        Show help
+   --filterhelp
+       Show filter options
    --active
        Only include images which are actively maintained
    --deleted
@@ -74,6 +77,24 @@ options:
        Show program version
 
 For Additional help run `man pint` to view the man page       
+"""
+
+filter_help = """
+   to use filters first you must select a operator:
+
+   = : select from items list where the attribute is an exact match to 'value'
+
+   ˜ : select from items list where 'value' is a substring of the attribute
+
+   ! : select from items list where 'value' is not a substring of the attribute
+
+   % : select from items list where 'value' is a regex matching the attribute
+
+   > : select from items list where the attribute is greater than 'value' as integers
+
+   < : select from items list where the attribute is less than 'value' as integers
+
+   after that you must put the data to filter based on the operator selected
 """
 
 import json
@@ -113,6 +134,11 @@ for arg in sys.argv:
         for provider in providers['providers']:
             filtered_images = ifsrequest.get_date_filtered_image(date_search, provider["name"], "json")
             print(filtered_images)
+
+for arg in sys.argv:
+    if arg.startswith('--filterhelp'):
+        print(filter_help)
+        
 
 command_args = docopt(
     __doc__.format(
@@ -164,30 +190,19 @@ region = 'all'
 if command_args['--region']:
     region = command_args['--region']
 
-# published_after = None
-# if command_args['--publishedafter']:
-#     published_after = command_args['--publishedafter']
-
-#     # formatted_date = datetime.strptime(published_after, "%Y-%m-%d").strftime("%Y%m%d")
-
-#     print(published_after)
-
 
 try:
     if command_args['images']:
-        if date_search:
-            print("o")
-        else:
-            data = ifsrequest.get_image_data(
-                framework,
-                image_state,
-                output_format,
-                region,
-                command_args['--filter'])
-            if '<images/>' in data or '"images": []' in data:
-                data = 'No information available. Please check your filter'
+        data = ifsrequest.get_image_data(
+            framework,
+            image_state,
+            output_format,
+            region,
+            command_args['--filter'])
+        if '<images/>' in data or '"images": []' in data:
+            data = 'No information available. Please check your filter'
         
-        # print(data)
+        print(data)
             
     elif command_args['teste']:
         data = ifsrequest.get_date_filtered_image(
