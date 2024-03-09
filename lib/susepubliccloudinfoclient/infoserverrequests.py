@@ -26,6 +26,7 @@ import urllib
 from lxml import etree
 import xmltodict
 
+MAIN_URL = 'https://susepubliccloudinfo.suse.com'
 
 def __apply_filters(superset, filters):
     # map operators to filter functions
@@ -147,10 +148,12 @@ def __form_url(
         region='all',
         image_state=None,
         server_type=None,
-        apply_filters=None):
+        url_search=None,
+        apply_filters=None
+        ):
     """Form the URL for the request"""
     url_components = []
-    url_components.append(__get_base_url())
+    url_components.append(__get_base_url(url_search))
     url_components.append(__get_api_version())
     if framework:
         url_components.append(framework)
@@ -169,6 +172,7 @@ def __form_url(
         url_components.append(doc_type)
     url_components[-1] = url_components[-1] + '.json'
     url = '/'
+    print(url.join(url_components))
     return url.join(url_components)
 
 
@@ -177,10 +181,13 @@ def __get_api_version():
     return 'v1'
 
 
-def __get_base_url():
+def __get_base_url(url_search):
     """Return the base url for the information service"""
-    return 'https://susepubliccloudinfo.suse.com'
-    # return 'http://localhost:9292'
+    if url_search != None:
+        return url_search
+    else:
+        return 'https://susepubliccloudinfo.suse.com'
+        # return 'http://localhost:9292'
 
 
 def __get_data(url):
@@ -309,7 +316,8 @@ def get_provider_data(
         type,
         result_format='plain',
         region='all',
-        command_arg_filter=None):
+        command_arg_filter=None,
+        url_search=None):
     """Return the requested providers information"""
     info_type = 'providers'
     url = __form_url(
@@ -318,6 +326,7 @@ def get_provider_data(
         result_format,
         region,
         type,
+        url_search=url_search,
         apply_filters=command_arg_filter
     )
     return __process(url, info_type, command_arg_filter, result_format)
@@ -328,7 +337,8 @@ def get_image_states_data(
         type,
         result_format='plain',
         region='all',
-        command_arg_filter=None):
+        command_arg_filter=None,
+        url_search=None):
     """Return the requested image states information"""
     info_type = 'states'
     url = __form_url(
@@ -337,6 +347,7 @@ def get_image_states_data(
         result_format,
         region,
         type,
+        url_search=url_search,
         apply_filters=command_arg_filter
     )
     return __process(url, info_type, command_arg_filter, result_format)
@@ -347,7 +358,8 @@ def get_server_types_data(
         type,
         result_format='plain',
         region='all',
-        command_arg_filter=None):
+        command_arg_filter=None,
+        url_search=None):
     """Return the requested server types information"""
     info_type = 'types'
     url = __form_url(
@@ -356,6 +368,7 @@ def get_server_types_data(
         result_format,
         region,
         type,
+        url_search=url_search,
         apply_filters=command_arg_filter
     )
     return __process(url, info_type, command_arg_filter, result_format)
@@ -366,7 +379,8 @@ def get_regions_data(
         type,
         result_format='plain',
         region='all',
-        command_arg_filter=None):
+        command_arg_filter=None,
+        url_search=None):
     """Return the requested regions information"""
     info_type = 'regions'
     url = __form_url(
@@ -375,6 +389,7 @@ def get_regions_data(
         result_format,
         region,
         type,
+        url_search=url_search,
         apply_filters=command_arg_filter
     )
     return __process(url, info_type, command_arg_filter, result_format)
@@ -385,7 +400,8 @@ def get_image_data(
         image_state,
         result_format='plain',
         region='all',
-        command_arg_filter=None):
+        command_arg_filter=None,
+        url_search=None):
     """Return the requested image information"""
     info_type = 'images'
     url = __form_url(
@@ -394,6 +410,7 @@ def get_image_data(
         result_format,
         region,
         image_state,
+        url_search=url_search,
         apply_filters=command_arg_filter
     )
     return __process(url, info_type, command_arg_filter, result_format)
@@ -404,7 +421,8 @@ def get_server_data(
         server_type,
         result_format='plain',
         region='all',
-        command_arg_filter=None):
+        command_arg_filter=None,
+        url_search=None):
     """Return the requested server information"""
     info_type = 'servers'
     url = __form_url(
@@ -413,13 +431,14 @@ def get_server_data(
         result_format,
         region,
         server_type=server_type,
+        url_search=url_search,
         apply_filters=command_arg_filter
     )
     return __process(url, info_type, command_arg_filter, result_format)
 
-def get_date_filtered_image(date, provider, format):
+def get_date_filtered_image(date, provider, format, url_search=None):
     # get data from API
-    images = get_image_data(provider,None,"json", "all",None)
+    images = get_image_data(provider,None,"json", "all",None, url_search)
     # transform data to help in filtering
     images_dict = json.loads(images)
 

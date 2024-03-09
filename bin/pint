@@ -73,6 +73,8 @@ options:
        Provide only SMT Server information
    --xml
        Output data in XML format
+   --url
+       Choose another URL to call the API
    -v --version
        Show program version
 
@@ -107,10 +109,14 @@ import lib.susepubliccloudinfoclient.version as version
 
 
         
+url_search = None
+for arg in sys.argv:
+    if arg.startswith('--urlsearch='):
+        url_search = arg.split('=', 1)[1]
 
 try:
     provider_data = ifsrequest.get_provider_data(
-        None, None, 'json', 'all', None
+        None, None, 'json', 'all', url_search
     )
 except Exception:
     print('Unable to contact pint server')
@@ -132,7 +138,7 @@ for arg in sys.argv:
         
         #execute search for each provider
         for provider in providers['providers']:
-            filtered_images = ifsrequest.get_date_filtered_image(date_search, provider["name"], "json")
+            filtered_images = ifsrequest.get_date_filtered_image(date_search, provider["name"], "json", url_search)
             print(filtered_images)
 
 for arg in sys.argv:
@@ -155,7 +161,7 @@ for csp in cloud_providers:
 
 image_state = None
 image_states_data = ifsrequest.get_image_states_data(
-    None, None, 'json', None
+    None, None, 'json', url_search
 )
 try:
     image_state_info = json.loads(image_states_data)
@@ -198,7 +204,8 @@ try:
             image_state,
             output_format,
             region,
-            command_args['--filter'])
+            command_args['--filter'],
+            url_search=url_search)
         if '<images/>' in data or '"images": []' in data:
             data = 'No information available. Please check your filter'
         
@@ -208,7 +215,8 @@ try:
         data = ifsrequest.get_date_filtered_image(
             "20240407",
             framework,
-            output_format)
+            output_format,
+            url_search)
         print(data)
 
 
@@ -218,35 +226,40 @@ try:
             server_type,
             output_format,
             region,
-            command_args['--filter']))
+            command_args['--filter']),
+            url_search=url_search)
     elif command_args['providers']:
         print(ifsrequest.get_provider_data(
             framework,
             server_type,
             output_format,
             region,
-            command_args['--filter']))
+            command_args['--filter']),
+            url_search)
     elif command_args['image_states']:
         print(ifsrequest.get_image_states_data(
             framework,
             server_type,
             output_format,
             region,
-            command_args['--filter']))
+            command_args['--filter']),
+            url_search=url_search)
     elif command_args['server_types']:
         print(ifsrequest.get_server_types_data(
             framework,
             server_type,
             output_format,
             region,
-            command_args['--filter']))
+            command_args['--filter']),
+            url_search=url_search)
     else:
         regions = ifsrequest.get_regions_data(
             framework,
             server_type,
             output_format,
             region,
-            command_args['--filter'])
+            command_args['--filter'],
+            url_search=url_search)
         if '<regions/>' in regions or '"regions": []' in regions:
             regions = ('No region information available. Images have '
                        'the same identifier in all regions')
